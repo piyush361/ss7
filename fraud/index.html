@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white shadow-2xl rounded-2xl p-6 max-w-lg w-full">
+        <h2 class="text-2xl font-bold mb-4 text-center">Test API Call</h2>
+        <button id="processButton" type="button" class="bg-blue-500 text-white py-2 px-4 rounded-xl hover:bg-blue-600 transition">
+            Start Processing
+        </button>
+
+        <div class="mt-4">
+            <h3 class="text-lg font-semibold">Output:</h3>
+            <div id="output" class="p-4 mt-2 border rounded-lg bg-gray-50 h-32 overflow-auto"></div>
+        </div>
+
+        <div class="mt-4">
+            <h3 class="text-lg font-semibold text-red-500">Error (if any):</h3>
+            <div id="error" class="p-4 mt-2 border border-red-400 bg-red-50 rounded-lg h-20 overflow-auto"></div>
+        </div>
+
+        <div class="mt-4">
+            <h3 class="text-lg font-semibold">Loading Animation:</h3>
+            <div id="loading" class="p-4 mt-2 text-center font-semibold hidden">⏳ Processing... Please wait</div>
+        </div>
+    </div>
+
+    <script>
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        document.getElementById("processButton").addEventListener("click", async (event) => {
+            console.log('Button clicked - event:', event);
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('After preventDefault');
+            
+            // Clear previous outputs
+            document.getElementById('error').textContent = '';
+            document.getElementById('output').textContent = '';
+            document.getElementById('loading').classList.remove('hidden');
+            
+            try {
+                console.log('Making process_audio request');
+                const processResponse = await fetch('http://localhost:8000/process_audio', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // body: JSON.stringify({}) // Add if needed
+                });
+                
+                console.log('Process response received');
+                if (!processResponse.ok) {
+                    throw new Error(`Processing error! Status: ${processResponse.status}`);
+                }
+
+                console.log('Making tdc request');
+                const response = await fetch('http://localhost:8000/tdc');
+                console.log('TDC response received');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Response:', data);
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                console.log('Request completed');
+            }
+            
+            return false; // Additional prevention
+        });
+
+        // Additional safety - prevent any form submission if there's a form somewhere
+        document.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submit prevented');
+            return false;
+        });
+    </script>
+</body>
+</html>

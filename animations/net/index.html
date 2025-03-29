@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS7 Packet Count</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #boxContainer {
+            margin-top: 20px;
+            width: 600px;
+            height: 400px;
+            border: 2px solid #ddd;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+        }
+        #packetCount {
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #333;
+        }
+        #reportContainer {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 90%;
+        }
+        .report-card {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <h1>SS7 Packet Count</h1>
+    <div id="packetCount">Total Packets: 0</div>
+    <div id="boxContainer"></div>
+    <div id="reportContainer">Waiting for reports...</div>
+
+    <script>
+        let totalPackets = 0;
+        const box = document.getElementById('boxContainer');
+        const reportContainer = document.getElementById('reportContainer');
+        const dots = [];
+
+        function createDot() {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.top = Math.random() * (box.clientHeight - 10) + 'px';
+            dot.style.left = Math.random() * (box.clientWidth - 10) + 'px';
+            box.appendChild(dot);
+            dots.push({ element: dot, dx: (Math.random() * 6 - 3), dy: (Math.random() * 6 - 3) });
+        }
+
+        function updateDots(newCount) {
+            const currentCount = dots.length;
+            if (newCount > currentCount) {
+                for (let i = 0; i < newCount - currentCount; i++) {
+                    createDot();
+                }
+            } else if (newCount < currentCount) {
+                for (let i = 0; i < currentCount - newCount; i++) {
+                    const removedDot = dots.pop();
+                    box.removeChild(removedDot.element);
+                }
+            }
+        }
+
+        function animateDots() {
+            dots.forEach(dot => {
+                let x = parseFloat(dot.element.style.left);
+                let y = parseFloat(dot.element.style.top);
+
+                x += dot.dx;
+                y += dot.dy;
+
+                if (x <= 0 || x >= box.clientWidth - 10) dot.dx *= -1;
+                if (y <= 0 || y >= box.clientHeight - 10) dot.dy *= -1;
+
+                dot.element.style.left = `${x}px`;
+                dot.element.style.top = `${y}px`;
+            });
+            requestAnimationFrame(animateDots);
+        }
+
+        async function fetchPacketCount() {
+            try {
+                const response = await fetch('http://localhost:8000/count');
+                const data = await response.json();
+                totalPackets = data.total_packets;
+                document.getElementById('packetCount').innerText = `Total Packets: ${totalPackets}`;
+                updateDots(totalPackets);
+            } catch (error) {
+                console.error('Error fetching packet count:', error);
+            }
+        }
+
+        async function fetchReports() {
+            try {
+                const response = await fetch('http://localhost:8000/reports');
+                const reports = await response.json();
+                displayReports(reports);
+            } catch (error) {
+                console.error('Error fetching reports:', error);
+            }
+        }
+
+        function displayReports(reports) {
+            reportContainer.innerHTML = '';
+            reports.slice(-5).forEach(report => {
+                const card = document.createElement('div');
+                card.className = 'report-card';
+                card.innerText = JSON.stringify(report, null, 2);
+                reportContainer.appendChild(card);
+            });
+        }
+
+        setInterval(fetchPacketCount, 2000);
+        setInterval(fetchReports, 5000);
+        animateDots();
+    </script>
+</body>
+</html>

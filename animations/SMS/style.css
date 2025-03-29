@@ -1,0 +1,151 @@
+body {
+    background-color: black;
+    display: flex;
+    justify-content: left;
+    
+    height: 100vh;
+    margin: 0;
+}
+
+img {
+    width: 140px;  /* Small size */
+    height: auto;
+    position: absolute;
+    opacity: 0;  /* Allows manual positioning */
+}
+
+
+#text-container {
+    position: absolute; /* Allows smooth movement */
+    top: 1500px; /* Keep initial position */
+    left: 400px;
+    background: rgba(0, 0, 0, 0.0); /* Dark background for contrast */
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    white-space: pre-wrap; /* Preserve line breaks */
+    word-wrap: break-word;
+    max-width: 300px;
+    font-size: 10px;
+    text-align: center;
+    opacity: 0;
+}
+
+#ct {
+    color: rgb(234, 243, 234);
+}
+
+
+#lookup {
+    position: absolute; /* Allows smooth movement */
+    top: 180px; /* Keep initial position */
+    left: 400px;
+    background: rgba(0, 0, 0, 0.0); /* Dark background for contrast */
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    white-space: pre-wrap; /* Preserve line breaks */
+    word-wrap: break-word;
+    max-width: 300px;
+    font-size: 10px;
+    text-align: center;
+    opacity: 0;
+}
+
+#tt {
+    color: rgb(234, 243, 234);
+}
+
+
+
+
+#start-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    height: 80px;
+    top: 500px;
+    position: absolute;
+    left: 200px;
+    width: 300;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#packet {
+    width: 30px; /* Small packet size */
+    height: auto;
+    position: absolute;
+    opacity: 0; /* Initially hidden */
+}
+
+
+
+
+/* Popup Styles */
+.popup {
+    display: none;
+    position: fixed;
+    top: 10px;  /* Adjusted to top-left */
+    left: 10px; /* Adjusted to top-left */
+    background: white;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+}
+
+
+.popup-content h2 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.popup-content input {
+    width: 90%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.popup-content button {
+    background-color: #28a745;
+    color: blueviolet;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+
+
+
+/* Positioning each component */
+#mobile-station { top: 690px; left: 270px; }
+#bts {  top: 400px; right: 10px; }
+#msc { top: 710px; left: 250px; }
+#smsc { width:  150px;top :480px; right: 120px; }
+#vlr { top: 50px; left: 300px; }
+#hlr { top: 50px; right: 300px; }
+#rc { top :100px; right: 180px; }
+
+
+
+
+/*
+  FINAL POS
+
+ #mobile-station { top: 600px; left: 350px; }
+#bts {  top: 350px; right: 1000px; }
+#msc { top: 620px; left: 1000px; }
+#smsc { width:  200px;top :400px; right: 200px; }
+#vlr { top: 80px; left: 550px; }
+#hlr { top: 80px; right: 550px; }
+*/
+
+
+
+
+
