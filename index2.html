@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Fraud Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #1e293b;
+            color: white;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        .left {
+            width: 30%;
+            padding: 20px;
+            background: #0f172a;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .right {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+            width: 100%;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #1e293b;
+            color: white;
+        }
+        button {
+            margin-top: 10px;
+            background: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .main-chart {
+            width: 300px;
+            height: 300px;
+            margin: 20px 0;
+        }
+        .spam-meter-container {
+            width: 80%;
+            margin: 20px 0;
+        }
+        .spam-meter {
+            width: 100%;
+            height: 30px;
+            background: #1e293b;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #334155;
+        }
+        .spam-level {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+            border-radius: 15px;
+            transition: width 1s ease-in-out;
+            position: relative;
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        .meter-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .case-studies {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+        .case-study {
+            position: absolute;
+            width: 100%;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .case-study.active {
+            opacity: 1;
+        }
+        .risk-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            font-weight: bold;
+        }
+        .safe {
+            background-color: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+        }
+        .suspicious {
+            background-color: rgba(255, 193, 7, 0.2);
+            border: 1px solid #FFC107;
+        }
+        .dangerous {
+            background-color: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <h2>Fraud SMS Categories</h2>
+            <h3>Phishing</h3>
+            <p>Scammers impersonate trusted sources to steal personal information.</p>
+            <h3>Lottery Scam</h3>
+            <p>Fraudulent messages claiming you have won a prize but require payment.</p>
+            <h3>Bank Fraud</h3>
+            <p>Fake banking alerts requesting sensitive details or OTPs.</p>
+            <h2>Example Messages</h2>
+            <button onclick="selectExample('Congratulations! You won $1000! Click here to claim.')">Lottery Scam</button>
+            <button onclick="selectExample('Your bank account is locked. Send OTP to reactivate.')">Bank Fraud</button>
+            <button onclick="selectExample('Your phone bill is unpaid. Pay now to avoid service disruption.')">Fake Billing</button>
+            <button onclick="selectExample('Your package is delayed. Click to update delivery information.')">Fake Shipping</button>
+        </div>
+        <div class="right">
+            <h2>SMS Fraud Detector</h2>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Enter SMS text...">
+                <button onclick="analyzeSMS()">Analyze</button>
+            </div>
+            
+            <div id="resultMessage" class="result-message" style="display: none;"></div>
+            
+            <div class="spam-meter-container">
+                <div class="spam-meter">
+                    <div class="spam-level" id="spamMeter"></div>
+                    <div class="risk-indicator" id="riskIndicator">Low Risk</div>
+                </div>
+                <div class="meter-labels">
+                    <span>Safe</span>
+                    <span>Suspicious</span>
+                    <span>Dangerous</span>
+                </div>
+            </div>
+            
+            <div class="main-chart">
+                <canvas id="fraudChart"></canvas>
+            </div>
+            
+            <div class="case-studies">
+                <div class="case-study active" id="case1">
+                    <h3>Case Study: Phishing Scam</h3>
+                    <p>A user received a message claiming their bank account was locked. They followed a link and entered their credentials, allowing scammers to steal funds from their account.</p>
+                </div>
+                <div class="case-study" id="case2">
+                    <h3>Case Study: Lottery Scam</h3>
+                    <p>A victim received a message stating they had won $10,000 but needed to pay processing fees. After sending multiple payments, they realized there was no prize.</p>
+                </div>
+                <div class="case-study" id="case3">
+                    <h3>Case Study: Tech Support Scam</h3>
+                    <p>An elderly user received a call after responding to a text about a computer virus. The scammer gained remote access and stole sensitive files after demanding payment for "repairs".</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let fraudChart;
+        let currentCase = 1;
+        
+        // Initialize case study rotation
+        function rotateCaseStudies() {
+            document.querySelectorAll('.case-study').forEach(el => el.classList.remove('active'));
+            document.getElementById(`case${currentCase}`).classList.add('active');
+            currentCase = currentCase % 3 + 1;
+            setTimeout(rotateCaseStudies, 5000);
+        }
+        
+        // Start the case study rotation
+        setTimeout(rotateCaseStudies, 5000);
+        
+        function selectExample(text) {
+            document.getElementById("userInput").value = text;
+        }
+        
+        function getRiskLevel(probability) {
+            if (probability < 0.4) return { level: "Low Risk", color: "#4CAF50", class: "safe" };
+            if (probability < 0.7) return { level: "Medium Risk", color: "#FFC107", class: "suspicious" };
+            return { level: "High Risk", color: "#F44336", class: "dangerous" };
+        }
+        
+        async function analyzeSMS() {
+            let userInput = document.getElementById("userInput").value;
+            if (!userInput.trim()) return;
+            
+            try {
+                let res = await fetch("http://127.0.0.1:8000/analyze", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({"message": userInput})
+                });
+                let data = await res.json();
+                updateUI(data);
+            } catch (error) {
+                console.error("Error processing request:", error);
+                alert("Error connecting to the fraud detection service. Please try again later.");
+            }
+        }
+        
+        function updateUI(data) {
+            // Update result message
+            const resultMessage = document.getElementById("resultMessage");
+            resultMessage.textContent = data.response;
+            resultMessage.style.display = "block";
+            
+            // Set appropriate class based on severity
+            const risk = getRiskLevel(data.spam_probability);
+            resultMessage.className = `result-message ${risk.class}`;
+            
+            // Update spam meter
+            const spamPercentage = data.spam_probability * 100;
+            document.getElementById('spamMeter').style.width = `${spamPercentage}%`;
+            
+            // Update risk indicator
+            const indicator = document.getElementById('riskIndicator');
+            indicator.textContent = risk.level;
+            indicator.style.color = risk.color;
+            
+            // Update fraud pattern chart
+            updateFraudPatternChart(data.fraud_pattern_distribution, data.pattern_match);
+        }
+        
+        function updateFraudPatternChart(distribution, matchedPattern) {
+            // Prepare data for chart
+            const labels = Object.keys(distribution);
+            const values = Object.values(distribution);
+            const backgroundColors = labels.map(pattern => {
+                return pattern === matchedPattern ? '#FF6384' : '#36A2EB'; // Highlight matched pattern
+            });
+            
+            // Update or create chart
+            if (fraudChart) fraudChart.destroy();
+            
+            const ctx = document.getElementById('fraudChart').getContext('2d');
+            fraudChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.map(label => label.replace('_', ' ')),
+                    datasets: [{
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'white',
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fraud Pattern Distribution',
+                            color: 'white',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${(context.raw * 100).toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%',
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
